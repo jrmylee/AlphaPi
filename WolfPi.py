@@ -1,13 +1,28 @@
 import wolframalpha
 from tkinter import *
-x = input('What is your question?')
-client = wolframalpha.Client('X969A9-QP6K293UUR')
-res = client.query(x)
-for pod in res.pods:
-    if type(pod) is img:
-        im = Image.open(pod)
-        im.show()
-    elif type(pod) is text:
-        print(pod)
 
-        
+from PIL import Image, ImageTk
+
+class WolframAlpha():
+    
+
+    def showPods(self):
+        x = input('What is your question?')
+        client = wolframalpha.Client('X969A9-QP6K293UUR')
+
+        res = client.query(x)
+
+        for pod in res.pods:
+            if pod.text:
+                print(pod.text)
+            elif pod.img:
+                print(pod.img)
+    def makeWindow(image):
+        root = Tk()
+        img = ImageTk.PhotoImage(Image.open(image))
+        theLabel = Label(root, text = "this is too easy")
+        theLabel.pack()
+        img.pack()
+        root.mainloop()
+app = WolframAlpha()
+app.showPods()
