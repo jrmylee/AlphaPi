@@ -1,15 +1,12 @@
 import wolframalpha
 from tkinter import *
-
-from PIL import Image, ImageTk
-
 class WolframAlpha():
     
 
     def showPods(self):
         x = input('What is your question?')
         client = wolframalpha.Client('X969A9-QP6K293UUR')
-
+        x = self.translate(x)
         res = client.query(x)
 
         for pod in res.pods:
@@ -19,10 +16,16 @@ class WolframAlpha():
                 print(pod.img)
     def makeWindow(image):
         root = Tk()
-        img = ImageTk.PhotoImage(Image.open(image))
-        theLabel = Label(root, text = "this is too easy")
-        theLabel.pack()
-        img.pack()
-        root.mainloop()
+
+        topFrame = Frame(root)
+        topFrame.pack()
+
+        bottomFrame = Frame(root)
+        bottomFrame.pack(side=BOTTOM)
+    def translate(self, String):
+        if String[0:2] == "d:":
+            return "derivative of"
+        else:
+            return String
 app = WolframAlpha()
 app.showPods()
