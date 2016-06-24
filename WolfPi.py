@@ -1,47 +1,80 @@
 import wolframalpha
 from tkinter import *
-from PIL import ImageTk, Image
+from tkinter import ttk
 import urllib.request
-
-
-
+import base64
 
 client = wolframalpha.Client('X969A9-QP6K293UUR')
 root = Tk()
-txtBox = Text(root)
-entry = Entry(root)
 
-
-class WolframAlpha():
-
-    def main(self):
-        button = Button(root,text = "Get Rekt", command=self.transmit)
-        labe = Label(root,text="Search", bg = "black", fg = "white")
-
-        txtBox.grid(row=0)
-        labe.grid(row = 1)
-        entry.grid(row=1, column=1)
-        button.grid(row=1, column=2)
-        root.mainloop()
-
-
-    def transmit(self):
-        res = client.query(entry.get())
+class WolframData():
+    count = 1.0
+    arrcount = 0
+    def transmit(self, txtBox,frame):
+        res = client.query(txtBox.get(str(self.count), END))
+        self.count += 2.0
         if len(res.pods) > 0:
             for pod in res.pods:
                 if pod.text:
-                    txtBox.insert('1.0', pod.text + '\n')
+                    self.count + 1.0
+                    txtBox.tag_configure('tag-right', justify='right')
+                    txtBox.insert(END, '\n' + pod.text + '\n', 'tag-right')
+                    txtBox.tag_configure('tag-left', justify='left')
                 elif pod.img:
-                    im = Image.open(urllib.request.urlopen(pod.img))
+                    url = pod.img
+                    response = urllib.request.urlopen(url)
+                    data = response.read()
+                    response.close()
+                    b64_data = base64.encodebytes(data)
+                    self.img = PhotoImage(data=b64_data)
+                    label = Label(frame, image = self.img)
+                    label.image = self.img
+                    label.pack()
+class WolframAlphaGUI(Frame):
+    def main(self):
+        data = WolframData
+        nb = ttk.Notebook(root)
+        page1 = ttk.Frame(nb)
+        page2 = ttk.Frame(nb)
+        scrollbar2 = Scrollbar(page1)
+        scrollbar2.pack(side=RIGHT,fill=Y)
 
-                    photo = PhotoImage(im)
-                    label = Label(root, image = photo)
-                    label.grid(row = 0, column = 1)
-    def translate(self, String):
-        if String[0:2] == "d:":
-            return "ddx" + String[2:len(String)]
-        else:
-            return String
+        Frame.__init__(self, page2)
+        self.canvas = Canvas(page2, borderwidth=0, background="#ffffff")
+        self.frame = Frame(self.canvas)
+        self.vsb = Scrollbar(page2, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+        self.frame.bind("<Configure>", self.onFrameConfigure)
 
-app = WolframAlpha()
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.create_window((4, 4), window=self.frame, anchor="nw",
+                                  tags="self.frame")
+
+        self.frame.bind("<Configure>", self.onFrameConfigure)
+
+        txtBox = Text(page1, wrap=WORD, yscrollcommand=scrollbar2.set)
+
+        button = Button(page1, text="Get Answers", command=lambda: data.transmit(data, txtBox,self.canvas))
+
+        nb.add(page1, text='Answers')
+        nb.add(page2, text='Graphs')
+
+        nb.grid(row=0)
+        nb.grid(row=0, column=1)
+
+        txtBox.pack()
+        button.pack()
+        root.mainloop()
+
+    def onFrameConfigure(canvas):
+        '''Reset the scroll region to encompass the inner frame'''
+        canvas.configure(scrollregion=canvas.bbox("all"))
+    def onFrameConfigure(self, event):
+        '''Reset the scroll region to encompass the inner frame'''
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+
+
+app = WolframAlphaGUI()
 app.main()
