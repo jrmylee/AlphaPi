@@ -5,22 +5,23 @@ import urllib.request
 import base64
 client = wolframalpha.Client('X969A9-QP6K293UUR')
 root = Tk()
-
+from decimal import Decimal
 class WolframData():
-    count = 1.0
-    arrcount = 0
-    def transmit(self, txtBox,frame):
-        pos = txtBox.index("end-1c linestart")
-        res = client.query(txtBox.get(pos+'',END))
-        print(pos)
+
+    def __init__(self):
+        self.img = NONE
+
+    def transmit(self, textbox, frame):
+
+        pos = textbox.index("end-1c linestart")
+
+        res = client.query(textbox.get(pos, END))
         if len(res.pods) > 0:
             for pod in res.pods:
                 if pod.text:
-                    txtBox.tag_configure('tag-right', justify='right')
-                    txtBox.insert(END, '\n' + pod.text + '\n', 'tag-right')
-                    txtBox.tag_configure('tag-left', justify='left')
-                    self.count+=10.0
-                    print(self.count)
+                    textbox.tag_configure('tag-right', justify='right')
+                    textbox.insert(END, '\n' + pod.text + '\n', 'tag-right')
+                    textbox.tag_configure('tag-left', justify='left')
                 elif pod.img:
                     url = pod.img
                     response = urllib.request.urlopen(url)
@@ -28,52 +29,79 @@ class WolframData():
                     response.close()
                     b64_data = base64.encodebytes(data)
                     self.img = PhotoImage(data=b64_data)
-                    label = Label(frame, image = self.img)
+                    label = Label(frame, image=self.img)
                     label.image = self.img
                     label.pack()
 
 
 class WolframAlphaGUI(Frame):
-    def main(self):
-        data = WolframData
-        nb = ttk.Notebook(root)
-        page1 = ttk.Frame(nb)
-        page2 = ttk.Frame(nb)
-        scrollbar2 = Scrollbar(page1)
-        scrollbar2.pack(side=RIGHT,fill=Y)
 
-        Frame.__init__(self, page2)
-        self.canvas = Canvas(page2, borderwidth=0, background="#ffffff")
+    def __init__(self):
+        Frame.__init__(self)
+        root.title("WolframPi")
+        self.canvas = NONE
+        self.frame = NONE
+        self.vsb = NONE
+        self.data = WolframData()
+        self.nb = ttk.Notebook(root)
+        self.page1 = ttk.Frame(self.nb)
+        self.page2 = ttk.Frame(self.nb)
+        scrollbar2 = Scrollbar(self.page1)
+        scrollbar2.pack(side=RIGHT, fill=Y)
+        self.textbox = Text(self.page1,wrap=WORD,yscrollcommand=scrollbar2.set)
+        self.menubar = Menu(root)
+
+        self.file = Menu(self.menubar, tearoff=0)
+        self.file.add_command(label="Open", command=self.hello)
+
+        self.edit = Menu(self.menubar, tearoff=0)
+        self.edit.add_command(label="Copy", command=self.hello)
+        self.edit.add_command(label="Paste",command=self.hello)
+
+        self.functions = Menu(self.menubar, tearoff=0)
+        self.functions.add_command(label="Graph", command=self.hello)
+
+        self.menubar.add_cascade(label="File", menu=self.file)
+        self.menubar.add_cascade(label="Edit", menu=self.edit)
+        self.menubar.add_cascade(label="Functions", menu=self.functions)
+
+    def main(self):
+
+        self.canvas = Canvas(self.page2, borderwidth=0, background="#ffffff")
         self.frame = Frame(self.canvas, background="#ffffff")
-        self.vsb = Scrollbar(page2, orient="vertical", command=self.canvas.yview)
+        self.vsb = Scrollbar(self.page2, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
         self.vsb.pack(side="right", fill="y")
         self.canvas.pack(side="left", fill="both", expand=True)
         self.canvas.create_window((4, 4), window=self.frame, anchor="nw",tags="self.frame")
-        self.frame.bind("<Configure>", self.onFrameConfigure)
+        self.frame.bind("<Configure>", self.onframeconfigure)
 
-        txtBox = Text(page1,wrap=WORD,yscrollcommand=scrollbar2.set)
-        button = Button(page1, text="Ask!", command=lambda: data.transmit(data, txtBox,self.frame))
+        button = Button(self.page1, text="Ask!", command=lambda: self.data.transmit(self.textbox, self.frame))
+        self.textbox.bind("<Key>", self.key)
 
-        nb.add(page1, text='Main')
-        nb.add(page2, text='More Info')
+        self.nb.add(self.page1, text='Main')
+        self.nb.add(self.page2, text='More Info')
 
-        nb.grid(row=0)
-        nb.grid(row=0, column=1)
+        self.nb.grid(row=0)
+        self.nb.grid(row=0, column=1)
 
-        txtBox.pack()
+        self.textbox.pack()
         button.pack()
+        root.config(menu=self.menubar)
+
         root.mainloop()
 
-    def onFrameConfigure(canvas):
+    def hello(self):
+        print("hello")
+    def key(self,event):
+        if str(event.char) == '\r':
+            self.data.transmit(self.textbox, self.frame)
+    def onframeconfigure(canvas):
         '''Reset the scroll region to encompass the inner frame'''
         canvas.configure(scrollregion=canvas.bbox("all"))
-    def onFrameConfigure(self, event):
+    def onframeconfigure(self, event):
         '''Reset the scroll region to encompass the inner frame'''
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-
-
-
 app = WolframAlphaGUI()
 app.main()
