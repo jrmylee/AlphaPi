@@ -3,7 +3,6 @@ from tkinter import *
 from tkinter import ttk
 import urllib.request
 import base64
-
 client = wolframalpha.Client('X969A9-QP6K293UUR')
 root = Tk()
 
@@ -11,15 +10,17 @@ class WolframData():
     count = 1.0
     arrcount = 0
     def transmit(self, txtBox,frame):
-        res = client.query(txtBox.get(str(self.count), END))
-        self.count += 2.0
+        pos = txtBox.index("end-1c linestart")
+        res = client.query(txtBox.get(pos+'',END))
+        print(pos)
         if len(res.pods) > 0:
             for pod in res.pods:
                 if pod.text:
-                    self.count + 1.0
                     txtBox.tag_configure('tag-right', justify='right')
                     txtBox.insert(END, '\n' + pod.text + '\n', 'tag-right')
                     txtBox.tag_configure('tag-left', justify='left')
+                    self.count+=10.0
+                    print(self.count)
                 elif pod.img:
                     url = pod.img
                     response = urllib.request.urlopen(url)
@@ -30,6 +31,8 @@ class WolframData():
                     label = Label(frame, image = self.img)
                     label.image = self.img
                     label.pack()
+
+
 class WolframAlphaGUI(Frame):
     def main(self):
         data = WolframData
@@ -41,24 +44,20 @@ class WolframAlphaGUI(Frame):
 
         Frame.__init__(self, page2)
         self.canvas = Canvas(page2, borderwidth=0, background="#ffffff")
-        self.frame = Frame(self.canvas)
+        self.frame = Frame(self.canvas, background="#ffffff")
         self.vsb = Scrollbar(page2, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
-        self.frame.bind("<Configure>", self.onFrameConfigure)
 
         self.vsb.pack(side="right", fill="y")
         self.canvas.pack(side="left", fill="both", expand=True)
-        self.canvas.create_window((4, 4), window=self.frame, anchor="nw",
-                                  tags="self.frame")
-
+        self.canvas.create_window((4, 4), window=self.frame, anchor="nw",tags="self.frame")
         self.frame.bind("<Configure>", self.onFrameConfigure)
 
-        txtBox = Text(page1, wrap=WORD, yscrollcommand=scrollbar2.set)
+        txtBox = Text(page1,wrap=WORD,yscrollcommand=scrollbar2.set)
+        button = Button(page1, text="Ask!", command=lambda: data.transmit(data, txtBox,self.frame))
 
-        button = Button(page1, text="Get Answers", command=lambda: data.transmit(data, txtBox,self.canvas))
-
-        nb.add(page1, text='Answers')
-        nb.add(page2, text='Graphs')
+        nb.add(page1, text='Main')
+        nb.add(page2, text='More Info')
 
         nb.grid(row=0)
         nb.grid(row=0, column=1)
