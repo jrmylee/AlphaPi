@@ -91,7 +91,31 @@ class CollatioGui(Frame):
         self.menubar.add_cascade(label="File", menu=self.file)
         self.menubar.add_cascade(label="Edit", menu=self.edit)
         self.menubar.add_cascade(label="Functions", menu=self.functions)
-        self.main(state)
+        self.nb.add(self.page1, text='Main')
+
+        if(self.internetstate is True):
+            self.canvas = Canvas(self.page2, borderwidth=0, background="#ffffff")
+            self.frame = Frame(self.canvas, background="#ffffff")
+            self.vsb = Scrollbar(self.page2, orient="vertical", command=self.canvas.yview)
+            self.canvas.configure(yscrollcommand=self.vsb.set)
+
+            self.vsb.pack(side="right", fill="y")
+            self.canvas.pack(side="left", fill="both", expand=True)
+            self.canvas.create_window((4, 4), window=self.frame, anchor="nw",tags="self.frame")
+            self.frame.bind("<Configure>", self.onframeconfigure)
+            self.nb.add(self.page2, text='More Info')
+
+        button = Button(self.page1, text="Ask!", command=lambda: self.data.transmit(self.textbox, self.frame))
+        self.textbox.bind("<Key>", self.key)
+
+        self.nb.grid(row=0)
+        self.nb.grid(row=0, column=1)
+
+        self.textbox.pack()
+        button.pack()
+        state.config(menu=self.menubar)
+
+        state.mainloop()
 
     def getoffline(self):
         self.online.destroy()
@@ -136,34 +160,6 @@ class CollatioGui(Frame):
         operation.grid(row=0,column=3)
         operationlabel.grid(row=0,column=2)
         matdim.mainloop()
-
-    def main(self, state):
-        if(self.internetstate is True):
-            self.canvas = Canvas(self.page2, borderwidth=0, background="#ffffff")
-            self.frame = Frame(self.canvas, background="#ffffff")
-            self.vsb = Scrollbar(self.page2, orient="vertical", command=self.canvas.yview)
-            self.canvas.configure(yscrollcommand=self.vsb.set)
-
-            self.vsb.pack(side="right", fill="y")
-            self.canvas.pack(side="left", fill="both", expand=True)
-            self.canvas.create_window((4, 4), window=self.frame, anchor="nw",tags="self.frame")
-            self.frame.bind("<Configure>", self.onframeconfigure)
-            self.nb.add(self.page2, text='More Info')
-
-        button = Button(self.page1, text="Ask!", command=lambda: self.data.transmit(self.textbox, self.frame))
-        self.textbox.bind("<Key>", self.key)
-
-        self.nb.add(self.page1, text='Main')
-
-
-        self.nb.grid(row=0)
-        self.nb.grid(row=0, column=1)
-
-        self.textbox.pack()
-        button.pack()
-        state.config(menu=self.menubar)
-
-        state.mainloop()
 
     def key(self,event):
         if str(event.char) == '\r':
