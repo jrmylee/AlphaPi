@@ -1,9 +1,17 @@
 import wolframalpha
 from tkinter import *
 from tkinter import ttk
+import matplotlib
+import matplotlib.animation as animation
+from matplotlib import style
+matplotlib.use("TkAgg")
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
 import urllib.request
 import base64
 client = wolframalpha.Client('X969A9-QP6K293UUR')
+style.use("ggplot")
 
 class CollatioData():
 
@@ -35,8 +43,7 @@ class CollatioData():
 class CollatioGui(Frame):
 
     def __init__(self, online):
-        self.online = Tk()
-        self.offline = NONE
+        self.gui = Tk()
         Frame.__init__(self)
         self.internetstate = online
 
@@ -52,23 +59,22 @@ class CollatioGui(Frame):
         self.file = NONE
         self.edit = NONE
         self.functions = NONE
+        self.a = NONE
+        self.initializegui()
 
-        self.initializegui(self.online)
-
-    def initializegui(self, state):
-        state.title("Collatio")
+    def initializegui(self):
+        self.gui.title("Collatio")
         self.canvas = NONE
         self.frame = NONE
         self.vsb = NONE
         self.data = CollatioData()
-        self.nb = ttk.Notebook(state)
+        self.nb = ttk.Notebook(self.gui)
         self.page1 = ttk.Frame(self.nb)
-        if self.internetstate is True:
-            self.page2 = ttk.Frame(self.nb)
+        self.page2 = ttk.Frame(self.nb)
         scrollbar2 = Scrollbar(self.page1)
         scrollbar2.pack(side=RIGHT, fill=Y)
         self.textbox = Text(self.page1, wrap=WORD, yscrollcommand=scrollbar2.set)
-        self.menubar = Menu(state)
+        self.menubar = Menu(self.gui)
 
         self.file = Menu(self.menubar, tearoff=0)
         self.edit = Menu(self.menubar, tearoff=0)
@@ -76,16 +82,13 @@ class CollatioGui(Frame):
 
         self.file.add_command(label="Open", command=self.hello)
         self.file.add_command(label="Settings", command=self.settings)
-        if self.internetstate is True:
-            self.file.add_command(label="Offline Mode", command=self.getoffline)
-        else:
-            self.file.add_command(label="Online Mode", command=self.getonline)
+        self.file.add_command(label="Offline Mode", command=self.getoffline)
 
         self.edit.add_command(label="Copy", command=self.hello)
         self.edit.add_command(label="Paste", command=self.hello)
 
         self.functions = Menu(self.menubar, tearoff=0)
-        self.functions.add_command(label="Graph", command=self.hello)
+        self.functions.add_command(label="Graph", command=self.graph)
         self.functions.add_command(label="Matrix", command=self.matdimsettings)
 
         self.menubar.add_cascade(label="File", menu=self.file)
@@ -93,17 +96,16 @@ class CollatioGui(Frame):
         self.menubar.add_cascade(label="Functions", menu=self.functions)
         self.nb.add(self.page1, text='Main')
 
-        if(self.internetstate is True):
-            self.canvas = Canvas(self.page2, borderwidth=0, background="#ffffff")
-            self.frame = Frame(self.canvas, background="#ffffff")
-            self.vsb = Scrollbar(self.page2, orient="vertical", command=self.canvas.yview)
-            self.canvas.configure(yscrollcommand=self.vsb.set)
+        self.canvas = Canvas(self.page2, borderwidth=0, background="#ffffff")
+        self.frame = Frame(self.canvas, background="#ffffff")
+        self.vsb = Scrollbar(self.page2, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
 
-            self.vsb.pack(side="right", fill="y")
-            self.canvas.pack(side="left", fill="both", expand=True)
-            self.canvas.create_window((4, 4), window=self.frame, anchor="nw",tags="self.frame")
-            self.frame.bind("<Configure>", self.onframeconfigure)
-            self.nb.add(self.page2, text='More Info')
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.create_window((4, 4), window=self.frame, anchor="nw", tags="self.frame")
+        self.frame.bind("<Configure>", self.onframeconfigure)
+        self.nb.add(self.page2, text='More Info')
 
         button = Button(self.page1, text="Ask!", command=lambda: self.data.transmit(self.textbox, self.frame))
         self.textbox.bind("<Key>", self.key)
@@ -113,25 +115,50 @@ class CollatioGui(Frame):
 
         self.textbox.pack()
         button.pack()
-        state.config(menu=self.menubar)
+        self.gui.config(menu=self.menubar)
 
-        state.mainloop()
+        self.gui.mainloop()
 
     def getoffline(self):
-        self.online.destroy()
-        self.offline = Tk()
         self.internetstate = False;
-        self.initializegui(self.offline)
+
 
     def getonline(self):
-        self.offline.destroy()
-        self.online = Tk()
         self.internetstate = True
-        self.initializegui(self.online)
 
     def hello(self):
         print("hello")
 
+    def graph(self):
+        f = Figure(figsize=(5,5),dpi=100)
+        self.a = f.add_subplot(111)
+        self.a.plot([1,2,3,4,5,],[1,2,3,4,5])
+
+        graphframe = Frame()
+        configure = Button(graphframe,text="Configure", command=self.configuregraph)
+        configure.pack()
+        graph = FigureCanvasTkAgg(f, master=graphframe)
+
+        self.nb.add(graphframe, text='Graph')
+        graph.show()
+        graph.get_tk_widget().pack(side=TOP, fill=BOTH, expand=True)
+
+        toolbar = NavigationToolbar2TkAgg(graph, graphframe)
+        toolbar.update()
+        graph._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
+        self.nb.select(graphframe)
+
+    def configuregraph(self):
+        configgraphpage = Frame()
+        num = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+        for n in num:
+            label = Label(configgraphpage, text="Graph {} :".format(n))
+            text = Text(configgraphpage)
+            text.configure(height=1,width=40)
+            text.grid(row=n, column=2)
+            label.grid(row=n)
+        self.nb.add(configgraphpage, text='Configure(Graph)')
+        self.nb.select(configgraphpage)
     def settings(self):
         settings = Tk()
         settings.title("Settings")
