@@ -4,7 +4,9 @@ from tkinter import ttk
 import urllib.request
 import base64
 client = wolframalpha.Client('X969A9-QP6K293UUR')
-root = Tk()
+online = Tk()
+Offline = NONE
+
 from decimal import Decimal
 class WolframData():
 
@@ -36,64 +38,129 @@ class WolframData():
 
 class WolframAlphaGUI(Frame):
 
-    def __init__(self):
+    def __init__(self, state, online):
         Frame.__init__(self)
-        root.title("WolframPi")
+        self.online = online
+        self.canvas = NONE
+        self.frame = NONE
+        self.vsb = NONE
+        self.data = NONE
+        self.nb = NONE
+        self.page1 = NONE
+        self.page2 = NONE
+        self.textbox = NONE
+        self.menubar = NONE
+        self.file = NONE
+        self.edit = NONE
+        self.functions = NONE
+
+        self.initializegui(state)
+
+    def initializegui(self, state):
+        state.title("WolframPi")
         self.canvas = NONE
         self.frame = NONE
         self.vsb = NONE
         self.data = WolframData()
-        self.nb = ttk.Notebook(root)
+        self.nb = ttk.Notebook(state)
         self.page1 = ttk.Frame(self.nb)
-        self.page2 = ttk.Frame(self.nb)
+        if(self.online is True):
+            self.page2 = ttk.Frame(self.nb)
         scrollbar2 = Scrollbar(self.page1)
         scrollbar2.pack(side=RIGHT, fill=Y)
-        self.textbox = Text(self.page1,wrap=WORD,yscrollcommand=scrollbar2.set)
-        self.menubar = Menu(root)
+        self.textbox = Text(self.page1, wrap=WORD, yscrollcommand=scrollbar2.set)
+        self.menubar = Menu(state)
 
         self.file = Menu(self.menubar, tearoff=0)
-        self.file.add_command(label="Open", command=self.hello)
-
         self.edit = Menu(self.menubar, tearoff=0)
+        self.functions = Menu(self.menubar, tearoff=0)
+
+        self.file.add_command(label="Open", command=self.hello)
+        self.file.add_command(label="Settings", command=self.settings)
+        if(self.online is True):
+            self.file.add_command(label="Offline Mode", command=self.getoffline)
+        else:
+            self.file.add_command(label="Online Mode", command=self.getonline)
+
         self.edit.add_command(label="Copy", command=self.hello)
-        self.edit.add_command(label="Paste",command=self.hello)
+        self.edit.add_command(label="Paste", command=self.hello)
 
         self.functions = Menu(self.menubar, tearoff=0)
         self.functions.add_command(label="Graph", command=self.hello)
+        self.functions.add_command(label="Matrix", command=self.matdimsettings)
 
         self.menubar.add_cascade(label="File", menu=self.file)
         self.menubar.add_cascade(label="Edit", menu=self.edit)
         self.menubar.add_cascade(label="Functions", menu=self.functions)
+        self.main(state)
+    def getoffline(self):
+        online.destroy()
+        Offline = Tk()
+        self.online = False;
+        self.initializegui(Offline)
+    def getonline(self):
+        Offline.destroy()
 
-    def main(self):
+    def hello(self):
+        print("hello")
 
-        self.canvas = Canvas(self.page2, borderwidth=0, background="#ffffff")
-        self.frame = Frame(self.canvas, background="#ffffff")
-        self.vsb = Scrollbar(self.page2, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.vsb.set)
+    def settings(self):
+        settings = Tk()
+        settings.title("Settings")
+        settings.mainloop()
 
-        self.vsb.pack(side="right", fill="y")
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.canvas.create_window((4, 4), window=self.frame, anchor="nw",tags="self.frame")
-        self.frame.bind("<Configure>", self.onframeconfigure)
+    def matdimsettings(self):
+        matdim = Tk()
+        matdim.title("Dimensions")
+        rowlabel = Label(matdim, text="Rows: ")
+        collabel = Label(matdim, text="Columns: ")
+        rowtext = Text(matdim, width=3, height=1)
+        coltext = Text(matdim, width=3, height=1)
+        done = Button(matdim, text="Done")
+        done.configure(width=6,height=1)
+        operationlabel = Label(matdim, text="Operation")
+
+        var1 = StringVar()
+        var1.set("Select")
+        operation = OptionMenu(matdim, var1,'Addition', 'Subtraction', 'Multiplication', 'Inverse')
+        operation.configure(width=6,height=1)
+        rowlabel.grid(row=0)
+        rowtext.grid(row=0, column=1)
+        collabel.grid(row=1)
+        coltext.grid(row=1, column=1)
+        done.grid(row=1,column=2)
+        operation.grid(row=0,column=3)
+        operationlabel.grid(row=0,column=2)
+        matdim.mainloop()
+
+    def main(self, state):
+        if(self.online is True):
+            self.canvas = Canvas(self.page2, borderwidth=0, background="#ffffff")
+            self.frame = Frame(self.canvas, background="#ffffff")
+            self.vsb = Scrollbar(self.page2, orient="vertical", command=self.canvas.yview)
+            self.canvas.configure(yscrollcommand=self.vsb.set)
+
+            self.vsb.pack(side="right", fill="y")
+            self.canvas.pack(side="left", fill="both", expand=True)
+            self.canvas.create_window((4, 4), window=self.frame, anchor="nw",tags="self.frame")
+            self.frame.bind("<Configure>", self.onframeconfigure)
+            self.nb.add(self.page2, text='More Info')
 
         button = Button(self.page1, text="Ask!", command=lambda: self.data.transmit(self.textbox, self.frame))
         self.textbox.bind("<Key>", self.key)
 
         self.nb.add(self.page1, text='Main')
-        self.nb.add(self.page2, text='More Info')
+
 
         self.nb.grid(row=0)
         self.nb.grid(row=0, column=1)
 
         self.textbox.pack()
         button.pack()
-        root.config(menu=self.menubar)
+        state.config(menu=self.menubar)
 
-        root.mainloop()
+        state.mainloop()
 
-    def hello(self):
-        print("hello")
     def key(self,event):
         if str(event.char) == '\r':
             self.data.transmit(self.textbox, self.frame)
@@ -103,5 +170,5 @@ class WolframAlphaGUI(Frame):
     def onframeconfigure(self, event):
         '''Reset the scroll region to encompass the inner frame'''
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-app = WolframAlphaGUI()
-app.main()
+
+app = WolframAlphaGUI(online, True)
