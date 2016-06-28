@@ -4,11 +4,8 @@ from tkinter import ttk
 import urllib.request
 import base64
 client = wolframalpha.Client('X969A9-QP6K293UUR')
-online = Tk()
-Offline = NONE
 
-from decimal import Decimal
-class WolframData():
+class CollatioData():
 
     def __init__(self):
         self.img = NONE
@@ -16,7 +13,6 @@ class WolframData():
     def transmit(self, textbox, frame):
 
         pos = textbox.index("end-1c linestart")
-
         res = client.query(textbox.get(pos, END))
         if len(res.pods) > 0:
             for pod in res.pods:
@@ -36,11 +32,14 @@ class WolframData():
                     label.pack()
 
 
-class WolframAlphaGUI(Frame):
+class CollatioGui(Frame):
 
-    def __init__(self, state, online):
+    def __init__(self, online):
+        self.online = Tk()
+        self.offline = NONE
         Frame.__init__(self)
-        self.online = online
+        self.internetstate = online
+
         self.canvas = NONE
         self.frame = NONE
         self.vsb = NONE
@@ -54,17 +53,17 @@ class WolframAlphaGUI(Frame):
         self.edit = NONE
         self.functions = NONE
 
-        self.initializegui(state)
+        self.initializegui(self.online)
 
     def initializegui(self, state):
-        state.title("WolframPi")
+        state.title("Collatio")
         self.canvas = NONE
         self.frame = NONE
         self.vsb = NONE
-        self.data = WolframData()
+        self.data = CollatioData()
         self.nb = ttk.Notebook(state)
         self.page1 = ttk.Frame(self.nb)
-        if(self.online is True):
+        if self.internetstate is True:
             self.page2 = ttk.Frame(self.nb)
         scrollbar2 = Scrollbar(self.page1)
         scrollbar2.pack(side=RIGHT, fill=Y)
@@ -77,7 +76,7 @@ class WolframAlphaGUI(Frame):
 
         self.file.add_command(label="Open", command=self.hello)
         self.file.add_command(label="Settings", command=self.settings)
-        if(self.online is True):
+        if self.internetstate is True:
             self.file.add_command(label="Offline Mode", command=self.getoffline)
         else:
             self.file.add_command(label="Online Mode", command=self.getonline)
@@ -93,13 +92,18 @@ class WolframAlphaGUI(Frame):
         self.menubar.add_cascade(label="Edit", menu=self.edit)
         self.menubar.add_cascade(label="Functions", menu=self.functions)
         self.main(state)
+
     def getoffline(self):
-        online.destroy()
-        Offline = Tk()
-        self.online = False;
-        self.initializegui(Offline)
+        self.online.destroy()
+        self.offline = Tk()
+        self.internetstate = False;
+        self.initializegui(self.offline)
+
     def getonline(self):
-        Offline.destroy()
+        self.offline.destroy()
+        self.online = Tk()
+        self.internetstate = True
+        self.initializegui(self.online)
 
     def hello(self):
         print("hello")
@@ -122,7 +126,7 @@ class WolframAlphaGUI(Frame):
 
         var1 = StringVar()
         var1.set("Select")
-        operation = OptionMenu(matdim, var1,'Addition', 'Subtraction', 'Multiplication', 'Inverse')
+        operation = OptionMenu(matdim, var1,'Add.', 'Sub.', 'X', 'Inv')
         operation.configure(width=6,height=1)
         rowlabel.grid(row=0)
         rowtext.grid(row=0, column=1)
@@ -134,7 +138,7 @@ class WolframAlphaGUI(Frame):
         matdim.mainloop()
 
     def main(self, state):
-        if(self.online is True):
+        if(self.internetstate is True):
             self.canvas = Canvas(self.page2, borderwidth=0, background="#ffffff")
             self.frame = Frame(self.canvas, background="#ffffff")
             self.vsb = Scrollbar(self.page2, orient="vertical", command=self.canvas.yview)
@@ -171,4 +175,11 @@ class WolframAlphaGUI(Frame):
         '''Reset the scroll region to encompass the inner frame'''
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
-app = WolframAlphaGUI(online, True)
+
+class CollatioController():
+    def main(self):
+        gui = CollatioGui(True)
+
+
+if __name__ == '__main__':
+    CollatioController().main()
