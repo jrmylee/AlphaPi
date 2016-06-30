@@ -13,6 +13,22 @@ import base64
 client = wolframalpha.Client('X969A9-QP6K293UUR')
 style.use("ggplot")
 
+f = Figure(figsize=(5,4), dpi=100)
+a = f.add_subplot(111)
+
+def animate(i):
+    pullData = open('graph.txt','r').read()
+    dataArray = pullData.split('\n')
+    xar=[]
+    yar=[]
+    for eachLine in dataArray:
+        if len(eachLine)>1:
+            x,y = eachLine.split(',')
+            xar.append(x)
+            yar.append(y)
+    a.clear()
+    a.plot(xar,yar)
+
 class CollatioData():
 
     def __init__(self):
@@ -130,16 +146,12 @@ class CollatioGui(Frame):
         print("hello")
 
     def graph(self):
-        f = Figure(figsize=(5,5),dpi=100)
-        self.a = f.add_subplot(111)
-        self.a.plot([1,2,3,4,5,],[1,2,3,4,5])
-
         graphframe = Frame()
-        configure = Button(graphframe,text="Configure", command=self.configuregraph)
-        configure.pack()
-        graph = FigureCanvasTkAgg(f, master=graphframe)
 
+        graph = FigureCanvasTkAgg(f, master=graphframe)
         self.nb.add(graphframe, text='Graph')
+        ani = animation.FuncAnimation(f, animate, interval=1000)
+
         graph.show()
         graph.get_tk_widget().pack(side=TOP, fill=BOTH, expand=True)
 
@@ -147,6 +159,7 @@ class CollatioGui(Frame):
         toolbar.update()
         graph._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
         self.nb.select(graphframe)
+
 
     def configuregraph(self):
         configgraphpage = Frame()
@@ -202,7 +215,6 @@ class CollatioGui(Frame):
 class CollatioController():
     def main(self):
         gui = CollatioGui(True)
-
 
 if __name__ == '__main__':
     CollatioController().main()
