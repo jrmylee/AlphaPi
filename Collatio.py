@@ -5,7 +5,7 @@ import matplotlib
 import matplotlib.animation as animation
 from matplotlib import style
 matplotlib.use("TkAgg")
-
+import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 import urllib.request
@@ -16,18 +16,22 @@ style.use("ggplot")
 f = Figure(figsize=(5,4), dpi=100)
 a = f.add_subplot(111)
 
+
 def animate(i):
-    pullData = open('graph.txt','r').read()
-    dataArray = pullData.split('\n')
-    xar=[]
-    yar=[]
-    for eachLine in dataArray:
-        if len(eachLine)>1:
-            x,y = eachLine.split(',')
-            xar.append(x)
-            yar.append(y)
+
+    xar=np.array(range(-16,16))
+    yar = eval('xar**2+2*xar')
+
+    xar1 = np.array(range(-16, 16))
+    yar1 = eval('xar**3+3*xar')
+
+    xar2 = np.array(range(-16, 16))
+    yar2 = eval('xar**4+4*xar')
+
     a.clear()
     a.plot(xar,yar)
+    a.plot(xar1, yar1)
+    a.plot(xar2, yar2)
 
 class CollatioData():
 
@@ -148,6 +152,9 @@ class CollatioGui(Frame):
     def graph(self):
         graphframe = Frame()
 
+        configure = Button(graphframe, text="Configure", command=self.configuregraph)
+        configure.pack()
+
         graph = FigureCanvasTkAgg(f, master=graphframe)
         self.nb.add(graphframe, text='Graph')
         ani = animation.FuncAnimation(f, animate, interval=1000)
@@ -160,9 +167,10 @@ class CollatioGui(Frame):
         graph._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
         self.nb.select(graphframe)
 
-
     def configuregraph(self):
+
         configgraphpage = Frame()
+        #update = Button(configgraphpage, text="Update", command=)
         num = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20)
         for n in num:
             label = Label(configgraphpage, text="Graph {} :".format(n))
