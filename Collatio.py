@@ -10,6 +10,11 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 import urllib.request
 import base64
+from sympy import *
+from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
+x, y, z = symbols('x y z')
+init_printing(use_unicode=True)
+
 client = wolframalpha.Client('X969A9-QP6K293UUR')
 style.use("ggplot")
 
@@ -37,7 +42,7 @@ class CollatioData():
 
     def __init__(self):
         self.img = NONE
-
+    # This method transmit a query to wolfram alpha and adds results to textbox and photos to the graphs section
     def transmit(self, textbox, frame):
 
         pos = textbox.index("end-1c linestart")
@@ -45,9 +50,7 @@ class CollatioData():
         if len(res.pods) > 0:
             for pod in res.pods:
                 if pod.text:
-                    textbox.tag_configure('tag-right', justify='right')
-                    textbox.insert(END, '\n' + pod.text + '\n', 'tag-right')
-                    textbox.tag_configure('tag-left', justify='left')
+                    self.output(pod.text, textbox)
                 elif pod.img:
                     url = pod.img
                     response = urllib.request.urlopen(url)
@@ -58,31 +61,27 @@ class CollatioData():
                     label = Label(frame, image=self.img)
                     label.image = self.img
                     label.pack()
+    # This method uses built in calculation functions to make calculations
 
+    def calculate(self, textbox, frame):
+
+        pos = textbox.index("end-1c linestart")
+        question = textbox.get(pos, END)
+        transformations = (standard_transformations + (implicit_multiplication_application,))
+        if question[0,3] == 'ddx':
+            self.output(diff(parse_expr(question[3,END], transformations=transformations), x), textbox)
+
+    def output(self, s, textbox):
+        textbox.tag_configure('tag-right', justify='right')
+        textbox.insert(END, '\n' + str(s) + '\n', 'tag-right')
+        textbox.tag_configure('tag-left', justify='left')
 
 class CollatioGui(Frame):
 
-    def __init__(self, online):
+    def __init__(self):
         self.gui = Tk()
         Frame.__init__(self)
-        self.internetstate = online
-
-        self.canvas = NONE
-        self.frame = NONE
-        self.vsb = NONE
-        self.data = NONE
-        self.nb = NONE
-        self.page1 = NONE
-        self.page2 = NONE
-        self.textbox = NONE
-        self.menubar = NONE
-        self.file = NONE
-        self.edit = NONE
-        self.functions = NONE
-        self.a = NONE
-        self.initializegui()
-
-    def initializegui(self):
+        self.internetstate = True
         self.gui.title("Collatio")
         self.canvas = NONE
         self.frame = NONE
@@ -127,24 +126,27 @@ class CollatioGui(Frame):
         self.frame.bind("<Configure>", self.onframeconfigure)
         self.nb.add(self.page2, text='More Info')
 
-        button = Button(self.page1, text="Ask!", command=lambda: self.data.transmit(self.textbox, self.frame))
+        self.button = Button(self.page1, text="Ask!", command=lambda: self.data.transmit(self.textbox, self.frame))
         self.textbox.bind("<Key>", self.key)
 
         self.nb.grid(row=0)
         self.nb.grid(row=0, column=1)
 
         self.textbox.pack()
-        button.pack()
+        self.button.pack()
         self.gui.config(menu=self.menubar)
 
         self.gui.mainloop()
 
     def getoffline(self):
         self.internetstate = False;
-
+        self.file.entryconfig(3, label="Online Mode", command=self.getonline)
+        self.button.configure(command=lambda: self.data.calculate(self.textbox, self.frame))
 
     def getonline(self):
         self.internetstate = True
+        self.file.entryconfig(3, label="Offline Mode", command=self.getoffline)
+        self.button.configure(command=lambda: self.data.transmit(self.textbox, self.frame))
 
     def hello(self):
         print("hello")
@@ -211,7 +213,11 @@ class CollatioGui(Frame):
 
     def key(self,event):
         if str(event.char) == '\r':
-            self.data.transmit(self.textbox, self.frame)
+            if self.internetstate == True:
+                self.data.transmit(self.textbox, self.frame)
+            else:
+                self.data.calculate(self.textbox, self.frame)
+
     def onframeconfigure(canvas):
         '''Reset the scroll region to encompass the inner frame'''
         canvas.configure(scrollregion=canvas.bbox("all"))
@@ -222,7 +228,7 @@ class CollatioGui(Frame):
 
 class CollatioController():
     def main(self):
-        gui = CollatioGui(True)
+        gui = CollatioGui()
 
 if __name__ == '__main__':
     CollatioController().main()

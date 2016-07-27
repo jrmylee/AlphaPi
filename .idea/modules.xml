@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../Collatio/.idea/Collatio.iml" filepath="$PROJECT_DIR$/../Collatio/.idea/Collatio.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/WolframPi.iml" filepath="$PROJECT_DIR$/.idea/WolframPi.iml" />
     </modules>
   </component>
 </project>
